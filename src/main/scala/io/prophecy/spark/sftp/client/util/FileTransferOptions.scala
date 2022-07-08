@@ -54,7 +54,9 @@ class FileTransferOptions(
     *
     * @since 0.1.0
     */
-  val password: Option[String] = parameters.get(PASSWORD)
+  val password: String = parameters.getOrElse(PASSWORD,
+    sys.error(s"Missing '$PASSWORD' option!!")
+  )
 
   /**
     * Value set with the option key __keyFilePath__.
@@ -64,7 +66,7 @@ class FileTransferOptions(
   val keyFilePath: Option[String] = parameters.get(KEY_FILE_PATH)
 
   require(
-    keyFilePath.isDefined != password.isDefined,
+    keyFilePath.isDefined != password.nonEmpty,
     s"Either '$KEY_FILE_PATH' or '$PASSWORD' is required to establish remote connection!!"
   )
 

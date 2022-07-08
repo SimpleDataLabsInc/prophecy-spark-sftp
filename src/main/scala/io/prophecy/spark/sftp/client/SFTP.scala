@@ -34,15 +34,14 @@ class SFTP(options: FileTransferOptions) extends BaseClient with Logging {
     if (options.keyFilePath.isDefined) {
       jsch.addIdentity(options.keyFilePath.get, options.passphrase.orNull)
     }
-
     val session: Session = jsch.getSession(
       options.username,
       options.host,
       options.port
     )
     session.setConfig("StrictHostKeyChecking", "no")
-    if (options.password.isDefined) {
-      session.setPassword(options.password.get)
+    if (options.password.nonEmpty) {
+      session.setPassword(options.password)
     }
     session.connect()
 
