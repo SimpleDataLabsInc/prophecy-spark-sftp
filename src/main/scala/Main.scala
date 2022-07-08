@@ -15,9 +15,9 @@ object Main {
     val temporaryPath = "/Users/maciej/Developer/prophecy/prophecy-spark-sftp/out"
     new File(temporaryPath).mkdirs()
 
-    val hostname = "prophecy.files.com"
-    val username = "maciej@prophecy.io"
-    val password = "tpd*qeb3fgj0XWY-nyw"
+    val hostname = "SECRET"
+    val username = "SECRET"
+    val password = "SECRET"
 
     val fileMode: FileMode = FileMode.Text
 
