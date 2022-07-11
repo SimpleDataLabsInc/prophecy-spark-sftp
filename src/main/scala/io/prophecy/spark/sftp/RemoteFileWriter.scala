@@ -22,11 +22,11 @@ import java.util.UUID
  * @since 0.1.0
  */
 private[sftp] case class RemoteFileWriter(
-                                                   sqlContext: SQLContext,
-                                                   mode: SaveMode,
-                                                   parameters: Map[String, String],
-                                                   data: DataFrame
-                                                 ) extends BaseRelation
+                                           sqlContext: SQLContext,
+                                           mode: SaveMode,
+                                           parameters: Map[String, String],
+                                           data: DataFrame
+                                         ) extends BaseRelation
   with Logging {
 
   override def schema: StructType = data.schema

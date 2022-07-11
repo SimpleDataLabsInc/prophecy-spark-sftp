@@ -25,7 +25,7 @@ package object client {
       options: FileTransferOptions
   ): BaseClient = {
     options.protocol match {
-      case Protocol.sftp => new SFTP2(options)
+      case Protocol.sftp => new SFTP(options)
       case x @ _ =>
         throw new NotImplementedError(
           s"Support ${x.toString} client is not yet implemented !!"

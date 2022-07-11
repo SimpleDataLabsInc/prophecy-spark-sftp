@@ -15,5 +15,5 @@ package io.prophecy.spark.sftp.client.util
   */
 object FileFormat extends Enumeration {
   type FileFormat = Value
-  val avro, csv, json, orc, parquet, text, xml = Value
+  val csv, text = Value
 }

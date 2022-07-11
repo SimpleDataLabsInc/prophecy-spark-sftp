@@ -1,69 +1,35 @@
 package io.prophecy.spark.sftp.client
 
-import java.io.File
-import java.nio.file.Paths
-import com.jcraft.jsch.{ChannelSftp, JSch, JSchException, Session, SftpException}
+import com.jcraft.jsch.{ChannelSftp, SftpException}
 import io.prophecy.spark.sftp.client.util.{FileTransferOptions, FileUtils}
+import net.schmizz.sshj.SSHClient
+import net.schmizz.sshj.sftp.{FileMode, SFTPClient, SFTPException}
+import net.schmizz.sshj.transport.verification.PromiscuousVerifier
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.SaveMode
 
-import scala.collection.JavaConverters._
+import java.io.File
+import java.nio.file.Paths
+import scala.collection.convert.ImplicitConversions.`collection AsScalaIterable`
 import scala.util.Try
 
-/**
-  * The `SFTPClient` class provides `upload` and `download` methods
-  * to transfer files to/from remote host via '''SFTP'''.
-  *
-  * @constructor Create a new `SFTPClient` by specifying their `options`.
-  * @param options Options passed by the user on the
-  *                '''DataFrameReader''' or '''DataFrameWriter''' API.
-  *
-  * @since 0.1.0
-  */
 class SFTP(options: FileTransferOptions) extends BaseClient with Logging {
-
-  private val STRICT_HOST_KEY_CHECKING: String = System.getProperty(
-    "STRICT_HOST_KEY_CHECKING",
-    "no"
-  )
   private val UNIX_PATH_SEPARATOR: String = "/"
 
-  @throws[JSchException]
-  private def connect: ChannelSftp = {
-    val jsch: JSch = new JSch()
-    if (options.keyFilePath.isDefined) {
-      jsch.addIdentity(options.keyFilePath.get, options.passphrase.orNull)
-    }
-    val session: Session = jsch.getSession(
-      options.username,
-      options.host,
-      options.port
-    )
-    session.setConfig("StrictHostKeyChecking", "no")
-    if (options.password.nonEmpty) {
-      session.setPassword(options.password)
-    }
-    session.connect()
-
-    val channel: ChannelSftp =
-      session.openChannel("sftp").asInstanceOf[ChannelSftp]
-    channel.connect()
-
-    channel
-  }
-
-  private def disconnect(channel: ChannelSftp): Unit = {
-    val session: Session = channel.getSession
-    channel.exit()
-    session.disconnect()
-  }
-
-  /** @inheritdoc */
+  /**
+   * Uploads local files to remote host.
+   *
+   * @param src  Local file/directory path.
+   * @param dest Remote directory path.
+   * @param mode Spark DataFrame Write Mode.
+   * @return Returns unit of successful upload.
+   * @since 0.1.0
+   */
   def upload(
-      src: String,
-      dest: String,
-      mode: SaveMode = SaveMode.Overwrite
-  ): Unit = {
+              src: String,
+              dest: String,
+              mode: SaveMode = SaveMode.Overwrite
+            ): Unit = {
     val srcPath: File = new File(src)
     val files: List[File] = {
       Try(srcPath.listFiles().toList).getOrElse(List(srcPath))
@@ -89,7 +55,7 @@ class SFTP(options: FileTransferOptions) extends BaseClient with Logging {
         )
     }
 
-    val client: ChannelSftp = connect
+    val client: SFTPClient = connect
     try {
       var path: String = ""
       var destDirs: List[String] = dest.split(UNIX_PATH_SEPARATOR).toList
@@ -108,8 +74,14 @@ class SFTP(options: FileTransferOptions) extends BaseClient with Logging {
         }
         log.info("Uploading file from " + source + " to " + target)
         val uploadMode: Int = getPutMode(client, target, mode)
+        log.info("Using upload mode: " + uploadMode)
+
         if (uploadMode != -1) {
-          client.put(source, target, uploadMode)
+          if (uploadMode == ChannelSftp.OVERWRITE) {
+            if (client.statExistence(target) != null) client.rm(target)
+
+          }
+          client.put(source, target)
         }
       })
 
@@ -118,21 +90,25 @@ class SFTP(options: FileTransferOptions) extends BaseClient with Logging {
     }
   }
 
-  /** @inheritdoc */
-  def download(src: String, dest: String): Unit = {
-    val client: ChannelSftp = connect
+  /**
+   * Downloads files from remote host.
+   *
+   * @param src  Remote file/directory path.
+   * @param dest Local directory path.
+   * @return Returns unit of successful download.
+   * @since 0.1.0
+   */
+  override def download(src: String, dest: String): Unit = {
+    val client = connect
     var files: List[String] = List(src)
-
     try {
-      if (client.stat(src).isDir) {
+      if (client.stat(src).getType == FileMode.Type.DIRECTORY) {
         files = client
           .ls(src)
-          .asInstanceOf[java.util.Vector[client.LsEntry]]
-          .asScala
           .filterNot(x => {
-            Set(".", "..").contains(x.getFilename) || x.getAttrs.isDir
+            Set(".", "..").contains(x.getName) || x.isDirectory
           })
-          .map(x => src + UNIX_PATH_SEPARATOR + x.getFilename)
+          .map(x => src + UNIX_PATH_SEPARATOR + x.getName)
           .toList
       }
 
@@ -148,28 +124,41 @@ class SFTP(options: FileTransferOptions) extends BaseClient with Logging {
     }
   }
 
+  private def connect: SFTPClient = {
+    val client = new SSHClient
+    client.addHostKeyVerifier(new PromiscuousVerifier)
+    client.connect(options.host)
+    client.authPassword(options.username, options.password)
+    val sftpClient = client.newSFTPClient()
+    sftpClient
+  }
+
+  private def disconnect(channel: SFTPClient): Unit = {
+    channel.close()
+    channel.getSFTPEngine.close()
+  }
+
   /**
-    * Gets the SFTP upload mode based on the provided Spark DataFrameWriter save mode.
-    *
-    * @param client SFTP client instance.
-    * @param target Target file path to upload on the remote machine.
-    * @param mode Spark DataFrame save mode to determine the file upload mode.
-    * @return SFTP upload mode.
-    *
-    * @since 0.3.0
-    */
+   * Gets the SFTP upload mode based on the provided Spark DataFrameWriter save mode.
+   *
+   * @param client SFTP client instance.
+   * @param target Target file path to upload on the remote machine.
+   * @param mode   Spark DataFrame save mode to determine the file upload mode.
+   * @return SFTP upload mode.
+   * @since 0.3.0
+   */
   def getPutMode(
-      client: ChannelSftp,
-      target: String,
-      mode: SaveMode
-  ): Int = mode match {
-    case x @ (SaveMode.ErrorIfExists | SaveMode.Ignore) =>
+                  client: SFTPClient,
+                  target: String,
+                  mode: SaveMode
+                ): Int = mode match {
+    case x@(SaveMode.ErrorIfExists | SaveMode.Ignore) =>
       var fileExists: Boolean = false
       try {
         fileExists = !client.ls(target).isEmpty
       } catch {
-        case ex: SftpException =>
-          if (ex.id == ChannelSftp.SSH_FX_NO_SUCH_FILE) fileExists = false
+        case ex: SFTPException =>
+          fileExists = false
       }
       if (fileExists) {
         if (x == SaveMode.ErrorIfExists) {
@@ -185,7 +174,8 @@ class SFTP(options: FileTransferOptions) extends BaseClient with Logging {
       } else {
         ChannelSftp.OVERWRITE
       }
-    case SaveMode.Append    => ChannelSftp.APPEND
+    case SaveMode.Append => ChannelSftp.APPEND
     case SaveMode.Overwrite => ChannelSftp.OVERWRITE
   }
 }
+
