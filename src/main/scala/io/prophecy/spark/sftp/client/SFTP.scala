@@ -9,7 +9,7 @@ import org.apache.spark.internal.Logging
 import org.apache.spark.sql.SaveMode
 
 import java.io.File
-import java.nio.file.Paths
+import java.nio.file.{FileSystems, Paths}
 import scala.collection.convert.ImplicitConversions.`collection AsScalaIterable`
 import scala.util.Try
 
@@ -102,7 +102,16 @@ class SFTP(options: FileTransferOptions) extends BaseClient with Logging {
     val client = connect
     var files: List[String] = List(src)
     try {
-      if (client.stat(src).getType == FileMode.Type.DIRECTORY) {
+      if (FileUtils.isFilePathGlob(src)) {
+        val pathComponents = client.getSFTPEngine.getPathHelper.getComponents(src)
+        val parent = pathComponents.getParent
+        val glob = FileSystems.getDefault.getPathMatcher("glob:" + src)
+        files = client.ls(parent)
+          .filter(x => glob.matches(Paths.get(x.getPath)))
+          .map(x => parent + UNIX_PATH_SEPARATOR + x.getName)
+          .toList
+      }
+      else if (client.stat(src).getType == FileMode.Type.DIRECTORY) {
         files = client
           .ls(src)
           .filterNot(x => {
@@ -111,7 +120,6 @@ class SFTP(options: FileTransferOptions) extends BaseClient with Logging {
           .map(x => src + UNIX_PATH_SEPARATOR + x.getName)
           .toList
       }
-
       for (source <- files) {
         val target: String = dest + File.separator + Paths
           .get(source)

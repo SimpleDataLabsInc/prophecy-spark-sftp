@@ -126,4 +126,16 @@ private[sftp] object FileUtils {
         )
       )
   }
+
+  /**
+   * checks if the given  path is a pattern
+   *
+   * @param path Path of the entity
+   * @return is path patter (true/false)
+   *
+   * @since 0.1.0
+   */
+  def isFilePathGlob(path: String):Boolean = {
+    path.contains("*") || path.contains("?") || (path.contains("[") && path.contains("]"))
+  }
 }
