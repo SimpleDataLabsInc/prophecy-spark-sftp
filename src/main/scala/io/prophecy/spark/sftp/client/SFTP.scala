@@ -1,7 +1,7 @@
 package io.prophecy.spark.sftp.client
 
-import com.jcraft.jsch.{ChannelSftp, SftpException}
-import io.prophecy.spark.sftp.client.util.{FileTransferOptions, FileUtils}
+import io.prophecy.spark.sftp.client.util.WriteMode.WriteMode
+import io.prophecy.spark.sftp.client.util.{FileTransferOptions, FileUtils, WriteMode}
 import net.schmizz.sshj.SSHClient
 import net.schmizz.sshj.sftp.{FileMode, SFTPClient, SFTPException}
 import net.schmizz.sshj.transport.verification.PromiscuousVerifier
@@ -73,14 +73,12 @@ class SFTP(options: FileTransferOptions) extends BaseClient with Logging {
           dest + UNIX_PATH_SEPARATOR + x.getName
         }
         log.info("Uploading file from " + source + " to " + target)
-        val uploadMode: Int = getPutMode(client, target, mode)
+        val uploadMode: WriteMode = getPutMode(client, target, mode)
         log.info("Using upload mode: " + uploadMode)
 
-        if (uploadMode != -1) {
-          if (uploadMode == ChannelSftp.OVERWRITE) {
-            if (client.statExistence(target) != null) client.rm(target)
-
-          }
+        if (!uploadMode.equals(WriteMode.IGNORE)) {
+          if (uploadMode.equals(WriteMode.OVERWRITE) && client.statExistence(target) != null)
+            client.rm(target)
           client.put(source, target)
         }
       })
@@ -159,7 +157,7 @@ class SFTP(options: FileTransferOptions) extends BaseClient with Logging {
                   client: SFTPClient,
                   target: String,
                   mode: SaveMode
-                ): Int = mode match {
+                ): WriteMode = mode match {
     case x@(SaveMode.ErrorIfExists | SaveMode.Ignore) =>
       var fileExists: Boolean = false
       try {
@@ -177,13 +175,13 @@ class SFTP(options: FileTransferOptions) extends BaseClient with Logging {
           log.info(
             s"Ignoring target file '$target' write as it already exists on remote host '${options.host}'!!"
           )
-          -1
+          WriteMode.IGNORE
         }
       } else {
-        ChannelSftp.OVERWRITE
+        WriteMode.OVERWRITE
       }
-    case SaveMode.Append => ChannelSftp.APPEND
-    case SaveMode.Overwrite => ChannelSftp.OVERWRITE
+    case SaveMode.Append => WriteMode.APPEND
+    case SaveMode.Overwrite => WriteMode.OVERWRITE
   }
 }
 

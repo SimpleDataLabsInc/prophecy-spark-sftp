@@ -9,12 +9,11 @@ lazy val root = (project in file("."))
   )
 
 val SparkVersion = "3.3.0"
-val JschVersion = "0.1.55"
+val SshjVersion = "0.27.0"
 
 libraryDependencies ++= Seq(
   "org.apache.spark" %% "spark-sql" % SparkVersion,
-  "com.jcraft" % "jsch" % JschVersion,
-  "com.hierynomus" % "sshj" % "0.27.0"
+  "com.hierynomus" % "sshj" % SshjVersion
 )
 
 assemblyMergeStrategy in assembly := {
