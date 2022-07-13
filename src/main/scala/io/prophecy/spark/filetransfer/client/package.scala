@@ -1,6 +1,6 @@
-package io.prophecy.spark.sftp
+package io.prophecy.spark.filetransfer
 
-import io.prophecy.spark.sftp.client.util.{FileTransferOptions, Protocol}
+import io.prophecy.spark.filetransfer.client.util.{FileTransferOptions, Protocol}
 
 /**
   * Package object for common methods to access client classes.

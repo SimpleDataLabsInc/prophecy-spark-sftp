@@ -1,4 +1,4 @@
-package io.prophecy.spark.sftp.client
+package io.prophecy.spark.filetransfer.client
 
 import org.apache.spark.sql.SaveMode
 
@@ -11,6 +11,7 @@ import org.apache.spark.sql.SaveMode
   * @since 0.1.0
   */
 trait BaseClient {
+  val UNIX_PATH_SEPARATOR: String = "/"
 
   /**
     * Uploads local files to remote host.

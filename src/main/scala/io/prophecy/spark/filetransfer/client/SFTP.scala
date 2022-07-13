@@ -1,7 +1,7 @@
-package io.prophecy.spark.sftp.client
+package io.prophecy.spark.filetransfer.client
 
-import io.prophecy.spark.sftp.client.util.WriteMode.WriteMode
-import io.prophecy.spark.sftp.client.util.{FileTransferOptions, FileUtils, WriteMode}
+import io.prophecy.spark.filetransfer.client.util.WriteMode.WriteMode
+import io.prophecy.spark.filetransfer.client.util.{FileTransferOptions, FileUtils, WriteMode}
 import net.schmizz.sshj.SSHClient
 import net.schmizz.sshj.sftp.{FileMode, SFTPClient, SFTPException}
 import net.schmizz.sshj.transport.verification.PromiscuousVerifier
@@ -14,7 +14,6 @@ import scala.collection.convert.ImplicitConversions.`collection AsScalaIterable`
 import scala.util.Try
 
 class SFTP(options: FileTransferOptions) extends BaseClient with Logging {
-  private val UNIX_PATH_SEPARATOR: String = "/"
 
   /**
    * Uploads local files to remote host.

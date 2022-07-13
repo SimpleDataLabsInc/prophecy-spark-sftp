@@ -1,4 +1,4 @@
-package io.prophecy.spark.sftp
+package io.prophecy.spark.filetransfer
 
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.sources._

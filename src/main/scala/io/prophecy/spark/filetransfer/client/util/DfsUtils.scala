@@ -1,4 +1,4 @@
-package io.prophecy.spark.sftp.client.util
+package io.prophecy.spark.filetransfer.client.util
 
 import org.apache.hadoop.fs.{FileSystem, Path}
 import org.apache.spark.internal.Logging
@@ -9,7 +9,7 @@ import org.apache.spark.sql.SQLContext
   *
   * @since 0.1.0
   */
-private[sftp] class DfsUtils(sqlContext: SQLContext) extends Logging {
+private[filetransfer] class DfsUtils(sqlContext: SQLContext) extends Logging {
 
   /**
     * Copies local file to distributed file path.

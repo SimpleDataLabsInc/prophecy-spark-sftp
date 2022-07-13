@@ -5,7 +5,7 @@ mainClass in(Compile, run) := Some("Main")
 
 lazy val root = (project in file("."))
   .settings(
-    name := "prophecy-spark-sftp",
+    name := "prophecy-spark-filetransfer",
   )
 
 val SparkVersion = "3.3.0"

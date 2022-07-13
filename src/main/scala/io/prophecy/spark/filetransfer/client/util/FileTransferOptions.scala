@@ -1,4 +1,4 @@
-package io.prophecy.spark.sftp.client.util
+package io.prophecy.spark.filetransfer.client.util
 
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.catalyst.util.CaseInsensitiveMap
@@ -29,7 +29,7 @@ class FileTransferOptions(
 
   /**
     * Value set with the option key __protocol__.
-    * Default value set to ''sftp''.
+    * Default value set to ''filetransfer''.
     *
     * @since 0.1.0
     */

@@ -1,4 +1,4 @@
-package io.prophecy.spark.sftp.client.util
+package io.prophecy.spark.filetransfer.client.util
 
 import java.io.{File, IOException}
 

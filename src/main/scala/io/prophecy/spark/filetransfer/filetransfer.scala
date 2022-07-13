@@ -1,9 +1,9 @@
 package io.prophecy.spark
 
-import io.prophecy.spark.sftp.client.util.{FileTransferOptions, Protocol}
+import io.prophecy.spark.filetransfer.client.util.{FileTransferOptions, Protocol}
 import org.apache.spark.sql.{DataFrame, DataFrameReader, DataFrameWriter}
 
-package object sftp {
+package object filetransfer {
 
   /**
    * Adds methods for each supported [[Protocol Protocol]],
@@ -16,7 +16,7 @@ package object sftp {
   implicit class ProtocolDataFrameReader(reader: DataFrameReader) {
     def sftp: String => DataFrame = {
       reader
-        .format("io.prophecy.spark.sftp")
+        .format("io.prophecy.spark.filetransfer")
         .option(FileTransferOptions.PROTOCOL, Protocol.sftp.toString)
         .load
     }
@@ -33,7 +33,7 @@ package object sftp {
   implicit class ProtocolDataFrameWriter[T](writer: DataFrameWriter[T]) {
     def sftp: String => Unit = {
       writer
-        .format("io.prophecy.spark.sftp")
+        .format("io.prophecy.spark.filetransfer")
         .option(FileTransferOptions.PROTOCOL, Protocol.sftp.toString)
         .save
     }

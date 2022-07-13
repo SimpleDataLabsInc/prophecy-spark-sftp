@@ -1,4 +1,4 @@
-package io.prophecy.spark.sftp.client.util
+package io.prophecy.spark.filetransfer.client.util
 
 import java.io.{File, IOException}
 import java.util.UUID
@@ -10,7 +10,7 @@ import scala.util.Try
   *
   * @since 0.1.0
   */
-private[sftp] object FileUtils {
+private[filetransfer] object FileUtils {
 
   /**
     * Creates an empty file on the local file system.

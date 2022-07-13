@@ -1,4 +1,4 @@
-package io.prophecy.spark.sftp.client.util
+package io.prophecy.spark.filetransfer.client.util
 
 /**
   * Supported file formats to read/write data via Spark '''DataFrame API'''.

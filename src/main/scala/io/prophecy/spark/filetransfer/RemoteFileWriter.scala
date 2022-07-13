@@ -1,7 +1,7 @@
-package io.prophecy.spark.sftp
+package io.prophecy.spark.filetransfer
 
-import io.prophecy.spark.sftp.client.fileTransferClient
-import io.prophecy.spark.sftp.client.util.{DfsUtils, FileTransferOptions, FileUtils}
+import io.prophecy.spark.filetransfer.client.fileTransferClient
+import io.prophecy.spark.filetransfer.client.util.{DfsUtils, FileTransferOptions, FileUtils}
 import org.apache.hadoop.fs.Path
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.sources.BaseRelation
@@ -21,7 +21,7 @@ import java.util.UUID
  * @param data       Loaded Spark '''DataFrame'''.
  * @since 0.1.0
  */
-private[sftp] case class RemoteFileWriter(
+private[filetransfer] case class RemoteFileWriter(
                                            sqlContext: SQLContext,
                                            mode: SaveMode,
                                            parameters: Map[String, String],
